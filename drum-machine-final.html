@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101318" />
+  <meta name="description" content="Night Shift — a responsive drum machine built with React 17 for freeCodeCamp." />
+  <title>Night Shift — Drum Machine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101318;
+      --panel: #1b2028;
+      --panel-2: #242a34;
+      --border: #343b46;
+      --muted: #9ba5b3;
+      --text: #f3f0e9;
+      --accent: #ffc27a;
+      --accent-2: #f58f5e;
+      --mint: #bbefc9;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 36px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(245,143,94,.13), transparent 48%),
+        radial-gradient(ellipse at 10% 95%, rgba(150,166,204,.07), transparent 50%),
+        var(--bg);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+    #app { width: 100%; max-width: 920px; }
+    #drum-machine {
+      border: 1px solid #414650;
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(165deg, #222832 0%, #191e25 80%);
+      box-shadow: 0 30px 95px rgba(0,0,0,.48), 0 0 0 7px rgba(255,255,255,.02);
+    }
+    .masthead {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 26px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(16,19,24,.30);
+    }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-icon {
+      width: 46px; height: 46px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      background: var(--accent); color: #191914;
+    }
+    .brand-icon i { display: block; background: #30241a; width: 4px; border-radius: 8px; }
+    .brand-icon i:nth-child(1), .brand-icon i:nth-child(5) { height: 12px; }
+    .brand-icon i:nth-child(2), .brand-icon i:nth-child(4) { height: 23px; }
+    .brand-icon i:nth-child(3) { height: 31px; }
+    .brand-name { font-size: 19px; font-weight: 700; letter-spacing: -.7px; line-height: 1.15; }
+    .brand-sub, .micro, .label, .mini-value {
+      font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .brand-sub { margin-top: 5px; font-size: 10px; color: var(--muted); }
+    .top-badge { border: 1px solid #444c58; border-radius: 99px; padding: 8px 12px; font-size: 10px; color: #c5cbd2; white-space: nowrap; }
+    .top-badge::before { content: ''; display: inline-block; width: 7px; height: 7px; background: var(--mint); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 9px rgba(187,239,201,.6); }
+    .hero { padding: 30px 32px 10px; }
+    .eyebrow { font-size: 11px; color: var(--accent); font-family: 'DM Mono', monospace; letter-spacing: 1.65px; }
+    .hero h1 { margin: 10px 0 10px; font-size: clamp(32px, 5vw, 48px); line-height: 1.07; letter-spacing: -2px; font-weight: 700; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { margin: 0; color: #aeb7c2; font-size: 14px; line-height: 1.55; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(260px, .84fr); gap: 26px; padding: 30px 32px 32px; }
+    .section-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
+    .label { font-size: 11px; color: #e9edf1; }
+    .mini-value { font-size: 10px; color: #8995a4; white-space: nowrap; }
+    .pad-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .drum-pad {
+      position: relative;
+      height: 110px;
+      border: 1px solid #3e4651;
+      border-bottom: 4px solid #121720;
+      border-radius: 14px;
+      background: linear-gradient(146deg, #353d49, #242c35);
+      color: #f8f4ed;
+      font-size: 37px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      padding: 19px 8px 35px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 5px 12px rgba(0,0,0,.1);
+      transition: background .12s ease, transform .09s ease, border-color .12s ease, box-shadow .12s ease;
+    }
+    .drum-pad::after {
+      content: attr(data-sound);
+      position: absolute;
+      bottom: 13px; left: 5px; right: 5px;
+      color: #a5afba;
+      font-size: 10px;
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: .15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .drum-pad:hover { background: linear-gradient(146deg, #434c59, #2d3540); border-color: #697380; }
+    .drum-pad.active, .drum-pad:active {
+      transform: translateY(3px);
+      background: linear-gradient(150deg, #ffd39f, #f3a369);
+      color: #2b2018;
+      border-color: #ffd29a;
+      border-bottom-color: #ac623a;
+      box-shadow: 0 0 24px rgba(255,183,118,.23), inset 0 0 0 1px rgba(255,255,255,.3);
+    }
+    .drum-pad.active::after, .drum-pad:active::after { color: #76503a; }
+    .screen {
+      min-height: 216px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #536054;
+      border-radius: 16px;
+      padding: 21px;
+      background: radial-gradient(ellipse at top right, rgba(145,217,166,.17), transparent 65%), #18271f;
+      box-shadow: inset 0 0 35px rgba(0,0,0,.17);
+    }
+    .screen-top { display: flex; justify-content: space-between; align-items: center; }
+    .screen-top .label { color: #b4e4c0; }
+    .ready-dot { width: 8px; height: 8px; background: #b7f0be; border-radius: 50%; box-shadow: 0 0 12px rgba(183,240,190,.5); }
+    #display {
+      margin: 13px 0;
+      font-size: clamp(26px, 3vw, 33px);
+      line-height: 1.1;
+      min-height: 38px;
+      letter-spacing: -1px;
+      color: #e8ffeb;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+    .oscilloscope { display: flex; height: 46px; gap: 4px; align-items: center; opacity: .9; }
+    .oscilloscope span { display: block; width: 100%; min-width: 2px; border-radius: 10px; background: #94dfa7; opacity: .75; height: var(--height); transition: height .12s; }
+    .oscilloscope.playing span { animation: wave .35s ease-in-out infinite alternate; animation-delay: var(--delay); }
+    @keyframes wave { from { transform: scaleY(.5); } to { transform: scaleY(1.5); } }
+    .volume-panel { margin-top: 18px; padding: 20px 22px; border: 1px solid var(--border); border-radius: 15px; background: rgba(7,10,15,.20); }
+    .slider-row { display: flex; align-items: center; gap: 13px; margin-top: 15px; }
+    .slider-icon { font-size: 17px; color: var(--accent); }
+    input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); cursor: pointer; }
+    .volume-value { min-width: 39px; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
+    .help-panel { margin-top: 18px; border-radius: 15px; padding: 18px 20px; border: 1px dashed #48515d; }
+    .help-panel .label { color: #b8c1ca; }
+    .help-panel p { margin: 9px 0 0; color: #9eabb9; font-size: 13px; line-height: 1.6; }
+    .help-panel kbd { font: 11px 'DM Mono', monospace; border: 1px solid #5b6470; border-radius: 4px; padding: 2px 5px; color: #f6efe3; }
+    .bottom-bar { padding: 16px 32px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 11px; color: #8e9aa7; }
+    .bottom-bar strong { color: #cbd4db; font-weight: 500; }
+    @media (max-width: 720px) {
+      body { padding: 18px 12px; align-items: flex-start; }
+      .masthead { padding: 18px 20px; }
+      .hero { padding: 25px 20px 3px; }
+      .workspace { grid-template-columns: 1fr; gap: 24px; padding: 24px 20px; }
+      .drum-pad { height: 90px; font-size: 31px; padding-top: 13px; }
+      .bottom-bar { padding: 14px 20px; }
+      .screen { min-height: 176px; }
+    }
+    @media (max-width: 400px) {
+      .top-badge { display: none; }
+      .pad-grid { gap: 8px; }
+      .drum-pad { height: 86px; }
+      .drum-pad::after { font-size: 9px; }
+      .hero h1 { letter-spacing: -1.4px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .drum-pad { transition: none; } .oscilloscope.playing span { animation: none; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <!-- React 17 avoids the React 18 compatibility issue noted by freeCodeCamp. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+  <script>
+    'use strict';
+    const h = React.createElement;
+    const samples = [
+      {key: 'Q', id: 'Heater-1',      name: 'Heater 1',     src: 'https://cdn.freecodecamp.org/curriculum/drum/Heater-1.mp3'},
+      {key: 'W', id: 'Heater-2',      name: 'Heater 2',     src: 'https://cdn.freecodecamp.org/curriculum/drum/Heater-2.mp3'},
+      {key: 'E', id: 'Heater-3',      name: 'Heater 3',     src: 'https://cdn.freecodecamp.org/curriculum/drum/Heater-3.mp3'},
+      {key: 'A', id: 'Heater-4',      name: 'Heater 4',     src: 'https://cdn.freecodecamp.org/curriculum/drum/Heater-4_1.mp3'},
+      {key: 'S', id: 'Clap',          name: 'Clap',         src: 'https://cdn.freecodecamp.org/curriculum/drum/Heater-6.mp3'},
+      {key: 'D', id: 'Open-HH',       name: 'Open HH',      src: 'https://cdn.freecodecamp.org/curriculum/drum/Dsc_Oh.mp3'},
+      {key: 'Z', id: 'Kick-n-Hat',    name: 'Kick n Hat',   src: 'https://cdn.freecodecamp.org/curriculum/drum/Kick_n_Hat.mp3'},
+      {key: 'X', id: 'Kick',          name: 'Kick',         src: 'https://cdn.freecodecamp.org/curriculum/drum/RP4_KICK_1.mp3'},
+      {key: 'C', id: 'Closed-HH',     name: 'Closed HH',    src: 'https://cdn.freecodecamp.org/curriculum/drum/Cev_H2.mp3'}
+    ];
+    const byKey = Object.fromEntries(samples.map(item => [item.key, item]));
+
+    class DrumMachine extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { display: 'Ready to play', activeKey: null, volume: 80 };
+        this.trigger = this.trigger.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onVolume = this.onVolume.bind(this);
+        this.lightTimer = null;
+      }
+      componentDidMount() {
+        document.addEventListener('keydown', this.onKeyDown);
+      }
+      componentWillUnmount() {
+        document.removeEventListener('keydown', this.onKeyDown);
+        clearTimeout(this.lightTimer);
+      }
+      onKeyDown(event) {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.target && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+        const key = typeof event.key === 'string' && event.key.length === 1
+          ? event.key.toUpperCase()
+          : String.fromCharCode(event.which || event.keyCode || 0).toUpperCase();
+        if (byKey[key]) {
+          event.preventDefault && event.preventDefault();
+          this.trigger(key);
+        }
+      }
+      onVolume(event) {
+        const volume = Number(event.target.value);
+        this.setState({ volume });
+        samples.forEach(item => {
+          const audio = document.getElementById(item.key);
+          if (audio) audio.volume = volume / 100;
+        });
+      }
+      trigger(key) {
+        const pad = byKey[key];
+        if (!pad) return;
+        const audio = document.getElementById(key);
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = this.state.volume / 100;
+          const result = audio.play();
+          if (result && typeof result.catch === 'function') result.catch(() => {});
+        }
+        clearTimeout(this.lightTimer);
+        this.setState({ display: pad.name, activeKey: key });
+        this.lightTimer = setTimeout(() => this.setState({ activeKey: null }), 190);
+      }
+      render() {
+        const waves = [9,19,12,27,20,35,16,29,40,24,14,37,22,11,31,41,18,26,13,33,21,9,27,38,17,29,12,25,15,34];
+        return h('main', { id: 'drum-machine' },
+          h('header', { className: 'masthead' },
+            h('div', { className: 'brand' },
+              h('span', { className: 'brand-icon', 'aria-hidden': 'true' }, ...[0,1,2,3,4].map(n => h('i', {key:n}))),
+              h('div', null,
+                h('div', { className: 'brand-name' }, 'NIGHT SHIFT'),
+                h('div', { className: 'brand-sub' }, 'Digital beat station')
+              )
+            ),
+            h('span', { className: 'top-badge micro' }, 'System online')
+          ),
+          h('section', { className: 'hero' },
+            h('div', { className: 'eyebrow' }, '●  STUDIO / 001'),
+            h('h1', null, 'Make some ', h('span', null, 'noise.')),
+            h('p', null, 'Nine sounds. Endless ideas. Tap the pads or play with your keyboard.')
+          ),
+          h('div', { className: 'workspace' },
+            h('section', { className: 'pad-section', 'aria-label': 'Drum pads' },
+              h('div', { className: 'section-top' },
+                h('div', { className: 'label' }, '01 / DRUM PADS'),
+                h('div', { className: 'mini-value' }, '9 SAMPLES')
+              ),
+              h('div', { className: 'pad-grid' },
+                ...samples.map(pad => h('button', {
+                  key: pad.key,
+                  type: 'button',
+                  id: pad.id,
+                  className: 'drum-pad' + (this.state.activeKey === pad.key ? ' active' : ''),
+                  'data-sound': pad.name,
+                  'aria-label': pad.key + ' — ' + pad.name,
+                  onClick: () => this.trigger(pad.key)
+                },
+                  pad.key,
+                  h('audio', { className: 'clip', id: pad.key, src: pad.src, preload: 'auto' })
+                ))
+              )
+            ),
+            h('section', { className: 'control-section', 'aria-label': 'Sound controls' },
+              h('div', { className: 'section-top' },
+                h('div', { className: 'label' }, '02 / CONTROL ROOM'),
+                h('div', { className: 'mini-value' }, 'LIVE OUTPUT')
+              ),
+              h('div', { className: 'screen' },
+                h('div', { className: 'screen-top' },
+                  h('div', { className: 'label' }, 'NOW PLAYING'),
+                  h('span', { className: 'ready-dot', 'aria-hidden': 'true' })
+                ),
+                h('div', { id: 'display', role: 'status', 'aria-live': 'polite' }, this.state.display),
+                h('div', { className: 'oscilloscope' + (this.state.activeKey ? ' playing' : ''), 'aria-hidden': 'true' },
+                  ...waves.map((n, i) => h('span', {key:i, style:{'--height': n + 'px', '--delay': ((i % 7) * 0.052) + 's'}}))
+                )
+              ),
+              h('div', { className: 'volume-panel' },
+                h('div', { className: 'label' }, 'MASTER VOLUME'),
+                h('div', { className: 'slider-row' },
+                  h('span', { className: 'slider-icon', 'aria-hidden': 'true' }, '◖))'),
+                  h('input', { type:'range', min:0, max:100, value:this.state.volume, onChange:this.onVolume, 'aria-label':'Volume' }),
+                  h('span', { className: 'volume-value' }, this.state.volume + '%')
+                )
+              ),
+              h('div', { className: 'help-panel' },
+                h('div', { className: 'label' }, 'QUICK START'),
+                h('p', null, 'Press ', h('kbd', null, 'Q'), ' ', h('kbd', null, 'W'), ' ', h('kbd', null, 'E'), ' / ', h('kbd', null, 'A'), ' ', h('kbd', null, 'S'), ' ', h('kbd', null, 'D'), ' / ', h('kbd', null, 'Z'), ' ', h('kbd', null, 'X'), ' ', h('kbd', null, 'C'), ' to layer your own rhythm.')
+              )
+            )
+          ),
+          h('footer', { className: 'bottom-bar' },
+            h('span', null, 'BUILT FOR ', h('strong', null, 'FREECODECAMP')),
+            h('span', null, 'MADE TO BE PLAYED ↗')
+          )
+        );
+      }
+    }
+
+    ReactDOM.render(h(DrumMachine), document.getElementById('app'));
+  </script>
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+</body>
+</html>
